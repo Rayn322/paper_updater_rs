@@ -3,11 +3,11 @@ use rfd::FileDialog;
 use std::path::PathBuf;
 
 fn main() {
-    let files = FileDialog::new()
+    let file = FileDialog::new()
         .add_filter("Paper Jar (*.jar)", &["jar"])
         .pick_file();
 
-    match files {
+    match file {
         Some(file) => {
             update_server(file);
         }
@@ -15,9 +15,11 @@ fn main() {
     }
 }
 
-fn update_server(file: PathBuf) {
-    match paper_api::fetch_latest() {
-        Ok(_) => println!("Success!"),
-        Err(_) => println!("Error!"),
-    }
+fn update_server(file: PathBuf) -> Result<(), ()> {
+    let url = match paper_api::fetch_latest_download() {
+        Ok(url) => url,
+        Err(_) => return Err(()),
+    };
+
+    Ok(())
 }
