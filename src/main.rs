@@ -137,7 +137,7 @@ fn update_start_script(folder: PathBuf, download: Download, old_name: String) ->
 
     let new_content = content.replace(
         old_name.as_str(),
-        format!("paper-{}-{}", download.version, download.build).as_str(),
+        format!("paper-{}-{}.jar", download.version, download.build).as_str(),
     );
 
     match fs::write(script_path, new_content) {
