@@ -7,12 +7,12 @@ use std::{
     cmp::min,
     error::Error,
     fs::{self, File},
-    io::Write,
+    io::{self, Write},
     path::PathBuf,
 };
 
 #[tokio::main]
-async fn main() -> Result<(), ()> {
+async fn main() -> io::Result<()> {
     let file = FileDialog::new()
         .add_filter("Paper Jar (*.jar)", &["jar"])
         .pick_file();
@@ -23,6 +23,10 @@ async fn main() -> Result<(), ()> {
         }
         None => println!("No file selected!"),
     }
+
+    println!("Press enter to exit...");
+    let mut buffer = String::new();
+    io::stdin().read_line(&mut buffer)?;
 
     Ok(())
 }
