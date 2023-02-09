@@ -1,8 +1,15 @@
 mod paper_api;
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
+use paper_api::Download;
 use rfd::FileDialog;
-use std::{cmp::min, error::Error, fs::File, io::Write, path::PathBuf};
+use std::{
+    cmp::min,
+    error::Error,
+    fs::{self, File},
+    io::Write,
+    path::PathBuf,
+};
 
 #[tokio::main]
 async fn main() -> Result<(), ()> {
@@ -26,6 +33,16 @@ async fn update_server(mut file: PathBuf) -> Result<(), ()> {
         Err(_) => return Err(()),
     };
 
+    let old_name = match file.file_name() {
+        Some(name) => match name.to_str() {
+            Some(name) => name.to_owned(),
+            None => return Err(()),
+        },
+        None => return Err(()),
+    };
+    let mut folder: PathBuf = file.clone().into();
+    folder.pop();
+
     match std::fs::remove_file(&file) {
         Ok(_) => {
             file.pop();
@@ -45,6 +62,13 @@ async fn update_server(mut file: PathBuf) -> Result<(), ()> {
         }
         Err(_) => {
             return Err(());
+        }
+    }
+
+    match update_start_script(folder, download, old_name) {
+        Ok(_) => {}
+        Err(_) => {
+            println!("Failed to update start script!");
         }
     }
 
@@ -85,4 +109,52 @@ async fn download_file(url: &str, path: &str) -> Result<(), Box<dyn Error>> {
     bar.finish_with_message("Downloaded file successfully!");
 
     Ok(())
+}
+
+fn update_start_script(folder: PathBuf, download: Download, old_name: String) -> Result<(), ()> {
+    let script_path: PathBuf = match get_script_path(folder.clone()) {
+        Some(path) => path,
+        None => {
+            println!("No start script found!");
+            return Err(());
+        }
+    };
+
+    let content = match fs::read_to_string(&script_path) {
+        Ok(content) => content,
+        Err(_) => {
+            println!("Failed to read start script!");
+            return Err(());
+        }
+    };
+
+    let new_content = content.replace(
+        old_name.as_str(),
+        format!("paper-{}-{}", download.version, download.build).as_str(),
+    );
+
+    match fs::write(script_path, new_content) {
+        Ok(_) => {}
+        Err(_) => {
+            println!("Failed to write to start script!");
+            return Err(());
+        }
+    }
+
+    Ok(())
+}
+
+fn get_script_path(path: PathBuf) -> Option<PathBuf> {
+    let names = vec!["start.bat", "start.sh", "run.bat", "run.sh"];
+
+    for name in names {
+        let mut path: PathBuf = path.clone();
+        path.push(name);
+
+        if path.exists() {
+            return Some(path);
+        }
+    }
+
+    None
 }
