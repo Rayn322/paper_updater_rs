@@ -53,7 +53,7 @@ async fn update_server(mut file: PathBuf) -> Result<(), ()> {
             file.push(format!("paper-{}-{}.jar", download.version, download.build));
 
             match file.to_str() {
-                Some(file) => match download_file(&download.url, file).await {
+                Some(file) => match download_file(&download, file).await {
                     Ok(_) => {}
                     Err(_) => {
                         return Err(());
@@ -80,10 +80,13 @@ async fn update_server(mut file: PathBuf) -> Result<(), ()> {
 }
 
 // adapted from https://gist.github.com/giuliano-oliveira/4d11d6b3bb003dba3a1b53f43d81b30d
-async fn download_file(url: &str, path: &str) -> Result<(), Box<dyn Error>> {
-    println!("Downloading {} to {}", url, path);
+async fn download_file(download: &Download, path: &str) -> Result<(), Box<dyn Error>> {
+    println!(
+        "Downloading Paper version {}, build {} to {}",
+        download.version, download.build, path
+    );
 
-    let res = reqwest::get(url).await?;
+    let res = reqwest::get(&download.url).await?;
     let total_size = res.content_length().ok_or("Couldn't get content length")?;
 
     let bar = ProgressBar::new(total_size);
@@ -95,7 +98,7 @@ async fn download_file(url: &str, path: &str) -> Result<(), Box<dyn Error>> {
 
     style = style.progress_chars("#>-");
     bar.set_style(style);
-    bar.set_message(format!("Downloading {}", url));
+    bar.set_message("Downloading file...");
 
     let mut file = File::create(path)?;
     let mut downloaded: u64 = 0;
