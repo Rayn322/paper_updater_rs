@@ -1,4 +1,5 @@
 mod paper_api;
+
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use paper_api::Download;
@@ -91,7 +92,7 @@ async fn download_file(download: &Download, path: &str) -> Result<(), Box<dyn Er
 
     let bar = ProgressBar::new(total_size);
     let mut style = match ProgressStyle::default_bar()
-    .template("{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({bytes_per_sec}, {eta})") {
+        .template("{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({bytes_per_sec}, {eta})") {
         Ok(style) => style,
         Err(_) => return Err("Error while creating progress bar".into()),
     };
@@ -152,7 +153,7 @@ fn update_start_script(folder: PathBuf, download: Download, old_name: String) ->
 }
 
 fn get_script_path(path: PathBuf) -> Option<PathBuf> {
-    let names = vec!["start.bat", "start.sh", "run.bat", "run.sh"];
+    let names = vec!["start.bat", "start.sh", "start", "run.bat", "run.sh", "run"];
 
     for name in names {
         let mut path: PathBuf = path.clone();
