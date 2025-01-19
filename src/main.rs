@@ -6,8 +6,7 @@ use paper_api::Download;
 use rfd::FileDialog;
 use std::{
     cmp::min,
-    error::Error,
-    fs::{self, File},
+    fs::{self},
     io::{self, Write},
     path::PathBuf,
 };
@@ -48,7 +47,7 @@ async fn update_server(mut file: PathBuf) -> Result<(), ()> {
     let mut folder: PathBuf = file.clone().into();
     folder.pop();
 
-    match std::fs::remove_file(&file) {
+    match fs::remove_file(&file) {
         Ok(_) => {
             file.pop();
             file.push(format!("paper-{}-{}.jar", download.version, download.build));
@@ -80,14 +79,16 @@ async fn update_server(mut file: PathBuf) -> Result<(), ()> {
     Ok(())
 }
 
-// adapted from https://gist.github.com/giuliano-oliveira/4d11d6b3bb003dba3a1b53f43d81b30d
-async fn download_file(download: &Download, path: &str) -> Result<(), Box<dyn Error>> {
+// adapted from https://gist.github.com/giuliano-macedo/4d11d6b3bb003dba3a1b53f43d81b30d
+async fn download_file(download: &Download, path: &str) -> Result<(), String> {
     println!(
         "Downloading Paper version {}, build {} to {}",
         download.version, download.build, path
     );
 
-    let res = reqwest::get(&download.url).await?;
+    let res = reqwest::get(&download.url)
+        .await
+        .or(Err("Failed to download file"))?;
     let total_size = res.content_length().ok_or("Couldn't get content length")?;
 
     let bar = ProgressBar::new(total_size);
@@ -101,7 +102,7 @@ async fn download_file(download: &Download, path: &str) -> Result<(), Box<dyn Er
     bar.set_style(style);
     bar.set_message("Downloading file...");
 
-    let mut file = File::create(path)?;
+    let mut file = fs::File::create(path).or(Err(format!("Failed to create file '{}'", path)))?;
     let mut downloaded: u64 = 0;
     let mut stream = res.bytes_stream();
 
