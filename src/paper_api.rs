@@ -38,7 +38,7 @@ pub async fn fetch_latest_download() -> Result<Download, ()> {
     };
 
     let download_url = format!(
-        "https://papermc.io/api/v2/projects/paper/versions/{0}/builds/{1}/downloads/paper-{0}-{1}.jar",
+        "https://api.papermc.io/v2/projects/paper/versions/{0}/builds/{1}/downloads/paper-{0}-{1}.jar",
         latest_version, latest_build
     );
 
@@ -50,7 +50,7 @@ pub async fn fetch_latest_download() -> Result<Download, ()> {
 }
 
 async fn get_version_list() -> reqwest::Result<VersionList> {
-    let version_list: VersionList = reqwest::get("https://papermc.io/api/v2/projects/paper")
+    let version_list: VersionList = reqwest::get("https://api.papermc.io/v2/projects/paper")
         .await?
         .json()
         .await?;
@@ -60,7 +60,7 @@ async fn get_version_list() -> reqwest::Result<VersionList> {
 
 async fn get_build_list(version: &str) -> reqwest::Result<BuildList> {
     let build_list: BuildList = reqwest::get(format!(
-        "https://papermc.io/api/v2/projects/paper/versions/{}",
+        "https://api.papermc.io/v2/projects/paper/versions/{}",
         version
     ))
     .await?
